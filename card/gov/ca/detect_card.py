@@ -1,9 +1,14 @@
 #!/usr/bin/env python2
 
+import logging
+import sys
+
 import cv2
 import numpy as np
-from matplotlib import image as image
 from SimpleCV import Image
+from matplotlib import image as image
+
+logging.basicConfig(stream=sys.stdout, level=logging.DEBUG)
 
 def detect_card_contour(img):
     '''
@@ -72,10 +77,11 @@ def order_points(pts):
 
 
 def four_point_transform(image, pts):
-    # obtain a consistent order of the points and unpack them
-    # individually
+    # obtain a consistent order of the points and unpack them individually
+
     rect = order_points(pts)
     (tl, tr, br, bl) = rect
+    logging.info("Applying four point transform on %s", rect)
 
     # compute the width of the new image, which will be the
     # maximum distance between bottom-right and bottom-left
@@ -107,6 +113,7 @@ def four_point_transform(image, pts):
     warped = cv2.warpPerspective(image, M, (maxWidth, maxHeight))
 
     # return the warped image
+    logging.info("Transformed %s to %s", rect, dst)
     return warped
 
 
@@ -144,44 +151,62 @@ if __name__ == "__main__":
 
     # apply the four point tranform to obtain a "birds eye view" of the image
     warped = four_point_transform(image, pts)
-    print u'warped image shape = {0:s}'.format(warped.shape)
+    logging.info('Warped image shape = %s', warped.shape)
     height, width, channels = warped.shape
 
     template = cv2.imread("data/gov/ca/dmv/template.jpg")
-    print u'template size = {0:s}'.format(template.shape)
-    print u'resizing to x={0:f}, y={0:f}'.format(float(template.shape[1]) / width,float(template.shape[1]) * 0.6305637982 / height)
+    logging.info(u'Template shape = %s', template.shape)
+    logging.info(u'Resizing to template\'s width %s by factor %s', template.shape[1], float(template.shape[1]) / width)
 
     # scale the warped image to match template
-    warped = cv2.resize(warped, (0,0), fx=float(template.shape[1]) / width, fy = float(template.shape[1]) * 0.6305637982 / height, interpolation = cv2.INTER_CUBIC)
-    print u'after resizing, warped image shape = {0:s}'.format(warped.shape)
+    resized_warped = cv2.resize(warped, (0, 0), fx=float(template.shape[1]) / width,
+                                fy=float(template.shape[1]) * 0.6305637982 / height, interpolation=cv2.INTER_CUBIC)
+    logging.info(u'After resizing, warped image shape = {0:s}'.format(resized_warped.shape))
 
     # show the original and warped images
-    cv2.imshow("Original", cv2.resize(image, (0,0), fx=0.2, fy=0.2 ))
+    cv2.imshow("Original", cv2.resize(image, (0, 0), fx=0.2, fy=0.2))
     # cv2.imshow("Warped", cv2.resize(warped, (0,0), fx=0.2, fy=0.2 * 0.6305637982 * width / height))
-    cv2.imshow('Warped', cv2.resize(warped, (0,0), fx=1, fy=1))
+    cv2.imshow('Warped', cv2.resize(warped, (0, 0), fx=1, fy=1))
     cv2.waitKey(0)
 
-    print "now trying to match template ... "
+    logging.info("Matching template ... ")
     # Convert OpenCV image to SimpleCV images
     # Look at the code of the Image Class it stupidly does the transform TWICE effectively doing nothing.
     # So you have to do the following
     #    transImg=img.transpose(1,0,2) # transpose the rows and columns
     #    transColImg=transImg[:,:,::-1] # change from BGR to RGB
     #    simpleCVImg=Image(transColImg)
-    simple_warped = Image(warped.transpose(1,0,2)[:,:,::-1])
-    simple_template = Image(template)
+    simple_resized_warped = Image(resized_warped.transpose(1, 0, 2)[:, :, ::-1])
+    # simple_resized_warped.getPIL().show()
+    simple_template = Image(template.transpose(1, 0, 2)[:, :, ::-1])
+    # simple_template.getPIL().show()
+    # simple_warped = Image(warped.transpose(1, 0, 2)[:, :, ::-1])
+    # simple_warped.getPIL().show()
 
-    res = simple_warped.findTemplate(template_image=simple_template, threshold=2.5)
+    res = simple_resized_warped.findTemplate(template_image=simple_template, threshold=2.5)
+    # This template is expected to match at the top left corner of the image
+    if res and res[0].x == 0 and res[0].y == 0:
+        logging.info("Template matched")
+
+    else:
+        logging.info("Template NOT matched")
+        logging.info(res)
 
     # Test parsing out with OCR with tesserocr package
-    pil_im = simple_warped.crop(x=385, y=309, w=386, h=36).getPIL()
+    # These coordinates are based on the ID-1 specification and 300dpi resolution
+    pil_im = simple_resized_warped.crop(x=331, y=309, w=386, h=36).getPIL()
     pil_im.show()
     import tesserocr
 
-    print tesserocr.tesseract_version()  # print tesseract-ocr version
-    print tesserocr.get_languages()  # prints tessdata path and list of available languages
-    print tesserocr.image_to_text(pil_im)  # print ocr text from image
-
+    # print tesserocr.tesseract_version()  # print tesseract-ocr version
+    # print tesserocr.get_languages()  # prints tessdata path and list of available languages
+    logging.info(u'Parsed street address %s', tesserocr.image_to_text(pil_im)) # print ocr text from image
+    simple_resized_warped.crop(x=385, y=246, w=280, h=36).getPIL().show()
+    logging.info(u'Parsed lastname: %s', tesserocr.image_to_text(simple_resized_warped.crop(x=385, y=246, w=280, h=36).getPIL()))
+    dob = simple_resized_warped.crop(x=402, y=377, w=200, h=40).whiteBalance().grayscale().binarize()
+    dob.getPIL().show()
+    logging.info('Parsed DOB:%s', tesserocr.image_to_text(dob.getPIL()))
+    logging.info(u'Parsed DOB: %s', tesserocr.image_to_text(simple_resized_warped.crop(x=822, y=411, w=168, h=40).getPIL()))
 
     # field = simple_warped.crop(x=385, y=389, w=386, h=36)
     # field = field.whiteBalance()
@@ -214,7 +239,7 @@ if __name__ == "__main__":
     print "Confirming a different template image won't match"
 
     false_template = Image('data/nl/government/idcard/template.png')
-    print simple_warped.findTemplate(template_image=false_template, threshold=2.5)
+    print simple_resized_warped.findTemplate(template_image=false_template, threshold=2.5)
     # template matching with cv2
     # false_template = cv2.imread('data/nl/government/idcard/template.png')
     # res = cv2.matchTemplate(warped, false_template, cv2.TM_CCOEFF)
@@ -229,8 +254,3 @@ if __name__ == "__main__":
     # cv2.rectangle(warped_copy,top_left, bottom_right, 255, 2)
     # cv2.imshow('False match', warped_copy)
     # cv2.waitKey(0)
-
-
-
-
-

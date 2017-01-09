@@ -1,6 +1,6 @@
 from SimpleCV import *
 import math
-
+import tesserocr
 
 class BaseCard(object):
     def __init__(self, args):
@@ -15,7 +15,8 @@ class BaseCard(object):
         field = field.grayscale() * 1.2  # Convert to grayscale and increase brightness
         field = field.binarize()
         try:
-            field_text = field.readText().strip().split("\n")[0] # Run tesseract OCR and cleanup result
+            # field_text = field.readText().strip().split("\n")[0] # Run tesseract OCR and cleanup result
+            field_text = tesserocr.image_to_text(field.getPIL()).strip().split("\n")[0] # Use an alternative Tesseract OCR python package
         except:
             field_text = ""
 

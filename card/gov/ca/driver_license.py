@@ -1,32 +1,35 @@
-from SimpleCV import *
-from card.base import BaseCard
-from time import strptime
-import detect_card
-import cv2
 import logging
 
-class drivinglicence(BaseCard):
+import cv2
+from SimpleCV import *
+
+import detect_card
+from card.base import BaseCard
+
+logging.basicConfig(stream=sys.stdout, level=logging.DEBUG)
+
+class driver_license(BaseCard):
     def __init__(self, args):
         self.card_aspect = 0.6305637982
         self.feature_angle = 93.1681203756
         self.name = 'California driving license'
-        self.data_directory = 'data/gov/ca/dmv'
-        self.dn = 'gov.ca.dmv'
-        self.unique_id = 'gov.ca.dmv'
+        self.data_directory = 'data/gov/ca/driver_license'
+        self.dn = 'gov.ca.driver_license'
+        self.unique_id = 'gov.ca.driver_license'
         self.template_match_threshold = 2.5
-        super(drivinglicence, self).__init__(args)
+        super(driver_license, self).__init__(args)
 
 
     def match(self, image):
 
         # Convert SimpleCV image to opencv image
-        image = image.getNumpy()
+        cv_image = image.getNumpy()
 
-        template, warped = self.warp(image)
+        template, warped = self.warp(cv_image)
 
-        logging.info("Match image to template ... ")
+        logging.info("Match image to template")
 
-        # Convert opencv warped image back to SimpleCV.ImageClass
+        # Convert OpenCV warped image back to SimpleCV.ImageClass
         simple_warped = Image(warped)
         template = Image(template)
 
@@ -62,18 +65,18 @@ class drivinglicence(BaseCard):
         # Get approximate polygon
         pts = np.array(
                 [p[0] for p in cv2.approxPolyDP(card_contour, 0.00001 * cv2.arcLength(card_contour, True), True)])
-        # apply the four point tranform to obtain a "birds eye view" of the image
+        # Apply four point transform to obtain a "birds eye view" of the image
         warped = detect_card.four_point_transform(image, pts)
-        print warped.shape
+        logging.info('Warped image shape = %s', warped.shape)
         height, width, channels = warped.shape
         template = cv2.imread(self.data_directory + "/template.jpg")
-        print template.shape
-        print float(template.shape[1]) / width
-        print float(template.shape[1]) * 0.6305637982 / height
+        logging.info(u'Template shape = %s', template.shape)
+        logging.info(u'Resizing to template\'s width %s by factor %s', template.shape[1], float(template.shape[1]) / width)
         # scale the warped image to match template
-        warped = cv2.resize(warped, (0, 0), fx=float(template.shape[1]) / width,
-                            fy=float(template.shape[1]) * 0.6305637982 / height, interpolation=cv2.INTER_CUBIC)
-        return template, warped
+        resized_warped = cv2.resize(warped, (0, 0), fx=float(template.shape[1]) / width,
+                            fy=float(template.shape[1]) * self.card_aspect / height, interpolation=cv2.INTER_CUBIC)
+        logging.info(u'After resizing, warped image shape = {0:s}'.format(resized_warped.shape))
+        return template, resized_warped
 
     def parse(self, card):
         self.get_text(card, "surname", x=385, y=389, w=368, h=36)
