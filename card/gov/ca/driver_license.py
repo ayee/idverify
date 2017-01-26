@@ -22,29 +22,14 @@ class driver_license(BaseCard):
 
     def match(self, image):
 
-        # Convert SimpleCV image to opencv image
-        cv_image = image.getNumpy()
-
-        template, warped = self.warp(cv_image)
-
         logging.info("Match image to template")
+        simple_template, simple_warped = self.warp(image)
+        simple_warped.getPIL().show()
+        simple_template.getPIL().show()
+        res = simple_warped.findTemplate(template_image=simple_template, threshold=self.template_match_threshold)
 
-        # Convert OpenCV warped image back to SimpleCV.ImageClass
-        simple_warped = Image(warped)
-        template = Image(template)
-
-        res = simple_warped.findTemplate(template_image=template, threshold=self.template_match_threshold)
-        ## Use opencv to match template
-        # res = cv2.matchTemplate(warped, template, cv2.TM_CCOEFF)
-        # min_val, max_val, min_loc, max_loc = cv2.minMaxLoc(res)
-        # print min_val, max_val, min_loc, max_loc
-        # h = template.shape[0]
-        # w = template.shape[1]
-        # top_left = max_loc
-        # bottom_right = (top_left[0] + w, top_left[1] + h)
-        # print top_left, bottom_right
-
-        if res:
+        if res and res[0].x == 0 and res[0].y == 0:
+            logging.info("Template matched")
             # width = template.width
             # height = template.width * self.card_aspect
             # card = input_image.crop(x=res.x()[0], y=res.y()[0], w=width+10, h=height+10)
@@ -53,9 +38,21 @@ class driver_license(BaseCard):
             # card = self.fix_rotation_twofeatures(card, 'top_left.png', ('top_right.png', 1, 'CCORR_NORM'))
             return self.parse(simple_warped)
         else:
+            logging.info("Template not matched: %s", res)
             return None
 
-    def warp(self, image):
+    def warp(self, simple_image):
+        '''
+        Warp with OpenCV's approxPolyDP to approximate a polygonal curve(s) with the specified precision,
+        and resize image to matching width of template
+        :param image: SimpleCV image
+        :return:
+        '''
+
+        # Convert SimpleCV image to opencv image
+        image = simple_image.getNumpyCv2()
+        # logging.info('Converted SimpleCV image %s to OpenCV images %s', simple_image, image)
+
         BINARY_THRESHOLD = 150
         gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
         ret, thresh = cv2.threshold(gray, BINARY_THRESHOLD, 255, cv2.THRESH_BINARY)
@@ -69,37 +66,46 @@ class driver_license(BaseCard):
         warped = detect_card.four_point_transform(image, pts)
         logging.info('Warped image shape = %s', warped.shape)
         height, width, channels = warped.shape
+
+        if self.debug:
+            cv2.imshow('Warped', cv2.resize(warped, (0, 0), fx=1, fy=1))
+            cv2.waitKey(0)
+
         template = cv2.imread(self.data_directory + "/template.jpg")
         logging.info(u'Template shape = %s', template.shape)
         logging.info(u'Resizing to template\'s width %s by factor %s', template.shape[1], float(template.shape[1]) / width)
         # scale the warped image to match template
         resized_warped = cv2.resize(warped, (0, 0), fx=float(template.shape[1]) / width,
                             fy=float(template.shape[1]) * self.card_aspect / height, interpolation=cv2.INTER_CUBIC)
-        logging.info(u'After resizing, warped image shape = {0:s}'.format(resized_warped.shape))
-        return template, resized_warped
+        logging.info(u'Warped image resized to {0:s}'.format(resized_warped.shape))
+
+        simple_resized_warped = Image(resized_warped.transpose(1, 0, 2)[:, :, ::-1])
+        simple_template = Image(template.transpose(1, 0, 2)[:, :, ::-1])
+        return simple_template, simple_resized_warped
 
     def parse(self, card):
-        self.get_text(card, "surname", x=385, y=389, w=368, h=36)
-        self.get_text(card, "first_name", x=320, y=166, w=600, h=32)
-        self.get_text(card, "birth_date", x=320, y=210, w=170, h=32)
+        self.get_text(card, "surname", x=385, y=246, w=280, h=36)
+        self.get_text(card, "first_name", x=390, y=286, w=386, h=33)
+        self.get_text(card, "birth_date", x=822, y=411, w=168, h=40)
         self.get_text(card, "birth_place", x=500, y=210, w=400, h=32)
         self.get_text(card, "date_of_issue", x=320, y=260, w=170, h=32)
         self.get_text(card, "date_of_expiry", x=580, y=260, w=170, h=32)
-        self.get_text(card, "authority", x=320, y=310, w=600, h=32)
-        self.get_text(card, "card_no", x=320, y=357, w=210, h=32)
+        self.get_text(card, "street_address", x=331, y=309, w=600, h=36)
+        self.get_text(card, 'city_state_zip', x=336, y=346, w=600, h=36)
+        self.get_text(card, "card_no", x=385, y=123, w=227, h=48)
         self.get_text(card, "categories", x=580, y=400, w=300, h=32)
 
         self.unique_id += self.fields['card_no']
 
         self.get_signature(card, x=320, y=388, w=217, h=87)
-        self.get_photo(card, x=60, y=150, w=217, h=320)
+        self.get_photo(card, x=26, y=123, w=296, h=395)
 
         structure = {
             'card': {
-                'type': 'nl.government.drivinglicence',
-                'class': 'driving-licence'
+                'type': 'gov.ca.driver_license',
+                'class': 'driving-license'
             },
-            'country': 'nl',
+            'country': 'us',
             'licenceId': self.fields['card_no'],
             'person': {
                 'surname': self.fields['surname'],
@@ -113,7 +119,8 @@ class driver_license(BaseCard):
                 'start': self.parse_date(self.fields['date_of_issue']),
                 'end': self.parse_date(self.fields['date_of_expiry'])
             },
-            'authority': self.fields['authority'],
+            'street_address': self.fields['street_address'],
+            'city_state_zip': self.fields['city_state_zip'],
             'categories': self.parse_categories(self.fields['categories'])
         }
 
@@ -126,8 +133,8 @@ class driver_license(BaseCard):
         # datestr: 12.12.1900
         datestr = datestr.replace(" ", "").replace(".", "")  # remove space and dot because they are common OCR mistakes
         try:
-            day = datestr[0:2]
-            month = datestr[2:4]
+            month = datestr[0:2]
+            day = datestr[2:4]
             year = datestr[4:8]
             datestr = "{}-{}-{}".format(year, month, day)  # 1900-12-12
         except:

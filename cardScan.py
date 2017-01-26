@@ -7,8 +7,8 @@ class CardScan:
         self.args = args
         self.verbose = args.verbose
         self.card_parsers = []
-        self.register_card("nl.government.idcard")
-        self.register_card("nl.government.drivinglicence")
+        # self.register_card("nl.government.idcard")
+        # self.register_card("nl.government.drivinglicence")
         self.register_card('gov.ca.driver_license')
 
     def register_card(self, dn):

@@ -154,14 +154,14 @@ if __name__ == "__main__":
     logging.info('Warped image shape = %s', warped.shape)
     height, width, channels = warped.shape
 
-    template = cv2.imread("data/gov/ca/dmv/template.jpg")
+    template = cv2.imread("data/gov/ca/driver_license/template.jpg")
     logging.info(u'Template shape = %s', template.shape)
     logging.info(u'Resizing to template\'s width %s by factor %s', template.shape[1], float(template.shape[1]) / width)
 
     # scale the warped image to match template
     resized_warped = cv2.resize(warped, (0, 0), fx=float(template.shape[1]) / width,
                                 fy=float(template.shape[1]) * 0.6305637982 / height, interpolation=cv2.INTER_CUBIC)
-    logging.info(u'After resizing, warped image shape = {0:s}'.format(resized_warped.shape))
+    logging.info(u'Warped image resized to {0:s}'.format(resized_warped.shape))
 
     # show the original and warped images
     cv2.imshow("Original", cv2.resize(image, (0, 0), fx=0.2, fy=0.2))
