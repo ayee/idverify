@@ -98,7 +98,14 @@ class driver_license(BaseCard):
         self.unique_id += self.fields['card_no']
 
         self.get_signature(card, x=320, y=388, w=217, h=87)
-        self.get_photo(card, x=26, y=123, w=296, h=395)
+        license_photo = self.get_photo(card, x=26, y=123, w=296, h=395)
+        import cognitive_face as CF
+        KEY = '558b0e3d935741d3a76578dc0e1e4e81'  # Replace with a valid Subscription Key here.
+        CF.Key.set(KEY)
+        license_photo.save("debug/test.jpg")
+        license = CF.face.detect("debug/test.jpg")[0]
+        selfie = CF.face.detect('/Users/ayee/git/cardscan/data/gov/ca/IMG_6942.JPG')[0]
+        print CF.face.verify(license['faceId'], selfie['faceId'])
 
         structure = {
             'card': {

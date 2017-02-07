@@ -41,6 +41,7 @@ class BaseCard(object):
             card.drawText("Photo", x=x+10, y=y, color=Color.RED)
         if self.args.export:
             field.save(self.unique_id + ".photo.png")
+        return field
 
     def get_feature_center(self, card, filename):
         if isinstance(filename, str):
