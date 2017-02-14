@@ -20,8 +20,8 @@ class CardScan:
         if self.verbose:
             print("Added detection class {}".format(dn))
 
-    def parse(self, filename):
-        input_image = Image(filename)
+    def parse(self, id_filename, pic_filename):
+        input_image = Image(id_filename)
 
         # Create new empty debug directory if debug is enabled
         if self.args.debug:
@@ -53,7 +53,7 @@ class CardScan:
             for tester in self.card_parsers:
                 if self.verbose:
                     print("  Running tester: {}".format(tester.name))
-                match = tester.match(ncard)
+                match = tester.match(ncard, pic_filename)
                 if match != None:
                     if self.verbose:
                         print("    Tester matched!")
@@ -81,6 +81,7 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(description='Tool to extract json objects from scanned cards')
     parser.add_argument('filename', help="File to scan for cards. This tool currently expects it to be 300dpi")
+    parser.add_argument('picture', help='File of picture to verify against picture in identification card')
     parser.add_argument('-v', '--verbose', action="store_true", help="Enable verbose output")
     parser.add_argument('-f', '--format', help="Output formatting", choices=['json', 'yaml'], default="yaml")
     parser.add_argument('-d', '--debug',
@@ -90,4 +91,4 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     cardscan = CardScan(args)
-    cardscan.parse(args.filename)
+    cardscan.parse(args.filename, args.picture)

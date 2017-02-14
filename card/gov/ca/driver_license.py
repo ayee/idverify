@@ -2,6 +2,7 @@ import logging
 
 import cv2
 from SimpleCV import *
+import cognitive_face as CF
 
 import detect_card
 from card.base import BaseCard
@@ -10,6 +11,9 @@ logging.basicConfig(stream=sys.stdout, level=logging.DEBUG)
 
 class driver_license(BaseCard):
     def __init__(self, args):
+
+        KEY = '558b0e3d935741d3a76578dc0e1e4e81'  # Replace with a valid Subscription Key here.
+        CF.Key.set(KEY)
         self.card_aspect = 0.6305637982
         self.feature_angle = 93.1681203756
         self.name = 'California driving license'
@@ -20,10 +24,15 @@ class driver_license(BaseCard):
         super(driver_license, self).__init__(args)
 
 
-    def match(self, image):
-
+    def match(self, card_image, pic_filename):
+        '''
+        Match card image to template and verify
+        :param card_image:
+        :param pic_filename
+        :return:
+        '''
         logging.info("Match image to template")
-        simple_template, simple_warped = self.warp(image)
+        simple_template, simple_warped = self.warp(card_image)
         simple_warped.getPIL().show()
         simple_template.getPIL().show()
         res = simple_warped.findTemplate(template_image=simple_template, threshold=self.template_match_threshold)
@@ -36,7 +45,7 @@ class driver_license(BaseCard):
             # card = card.resize(w=1000)
             #
             # card = self.fix_rotation_twofeatures(card, 'top_left.png', ('top_right.png', 1, 'CCORR_NORM'))
-            return self.parse(simple_warped)
+            return self.parse(simple_warped, pic_filename)
         else:
             logging.info("Template not matched: %s", res)
             return None
@@ -83,7 +92,13 @@ class driver_license(BaseCard):
         simple_template = Image(template.transpose(1, 0, 2)[:, :, ::-1])
         return simple_template, simple_resized_warped
 
-    def parse(self, card):
+    def parse(self, card, pic_filename):
+        '''
+        Parse out information from card and verify
+        :param card:
+        :param pic_filename:
+        :return:
+        '''
         self.get_text(card, "surname", x=385, y=246, w=280, h=36)
         self.get_text(card, "first_name", x=390, y=286, w=386, h=33)
         self.get_text(card, "birth_date", x=822, y=411, w=168, h=40)
@@ -99,12 +114,10 @@ class driver_license(BaseCard):
 
         self.get_signature(card, x=320, y=388, w=217, h=87)
         license_photo = self.get_photo(card, x=26, y=123, w=296, h=395)
-        import cognitive_face as CF
-        KEY = '558b0e3d935741d3a76578dc0e1e4e81'  # Replace with a valid Subscription Key here.
-        CF.Key.set(KEY)
+
         license_photo.save("debug/test.jpg")
         license = CF.face.detect("debug/test.jpg")[0]
-        selfie = CF.face.detect('/Users/ayee/git/cardscan/data/gov/ca/IMG_6942.JPG')[0]
+        selfie = CF.face.detect(pic_filename)[0]
         print CF.face.verify(license['faceId'], selfie['faceId'])
 
         structure = {

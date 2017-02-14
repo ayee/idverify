@@ -6,3 +6,4 @@ tessdata
 debug/
 *.photo.png
 *.signature.png
+.elasticbeanstalk/
