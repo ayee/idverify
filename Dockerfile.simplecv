@@ -1,0 +1,11 @@
+# Dockerfile used to build container based on SimpleCV
+# and then append other packages to enable Django
+FROM sightmachine/simplecv
+
+RUN pip install Django
+RUN apt-get install python-yaml
+RUN pip install PyYAML
+RUN pip install cognitive-face
+RUN pip install django-rest-swagger
+RUN pip install djangorestframework
+RUN pip install requests
