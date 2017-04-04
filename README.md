@@ -1,7 +1,7 @@
-cardscan
+idverify
 ========
 
-Python command-line tool to parse scanned documents with cards to various data structures
+Django/Python based web application and API to parse scanned photo identification documents with cards to various data structures
 
 features:
  - Reads cards from any valid image source for [SimpleCV][simplecv] (Currently expects 300 dpi images)
@@ -9,9 +9,29 @@ features:
  - Reads multiple cards from a single image (Multiple cards on the scanbed)
  
 Supported cards:
+ - CA driver license
  - Dutch personal indentification card
  - Dutch driving licence
  
+## Development
+Project is [dockerized](https://github.com/ayee/idverify/blob/master/Dockerfile)
+Follow these steps to start development 
+
+1. Install [Docker Toolbox for Mac])https://docs.docker.com/toolbox/toolbox_install_mac/). Note that there's a [difference](https://docs.docker.com/docker-for-mac/docker-toolbox/#setting-up-to-run-docker-for-mac) between Docker Toolbox and Docker for Mac.  Reason to use Toolbox is AWS ElasticBean and its documentation assumes Docker Toolbox
+
+2. Once installed, should be able to type `Docker Quickstart Terminal` in Spotlight Search and start Docker environment.
+
+3. In order to build a image from Dockerfile in this project, run
+    ```bash
+    docker build -t idverify .
+    ```
+    A docker image is built with the name 'idverfiy' and can be verified with:
+    ```bash
+    docker images
+    ```
+4. With PyCharm as IDE, create a Remote Python Interpreter with created image
+5. All Run and Debug should be run with the docker remote interpreter
+
 ## Installation
 
 cardscan depends on `python2.7`, `SimpleCV`, `pyyaml`, `tesseract-ocr` and `python-tesseract`
