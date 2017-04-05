@@ -1,11 +1,35 @@
 #!/usr/bin/env python2
 from SimpleCV import *
 import shutil
+import logging
+
+PROPERTY_VERBOSE = 'verbose'
+
+PROPERTY_DEBUG = 'debug'
+
+PROPERTY_FORMAT = 'format'
+
 
 class CardScan:
-    def __init__(self, args):
-        self.args = args
-        self.verbose = args.verbose
+    def __init__(self, props):
+        if isinstance(props, dict):
+            self.format = props[PROPERTY_FORMAT]
+            self.debug = props[PROPERTY_DEBUG]
+            self.verbose = props[PROPERTY_VERBOSE]
+        else: # assumed to be args object
+            self.format = props.format
+            self.debug = props.debug
+            self.verbose = props.verbose
+
+        #     logging.warning('Creating {0} object without properties (dict), will create with default values')
+        #     self.props = {
+        #         PROPERTY_FORMAT: 'yaml',
+        #         PROPERTY_DEBUG: True,
+        #         PROPERTY_VERBOSE: True
+        #     }
+        # else:
+        #     self.props = props
+
         self.card_parsers = []
         # self.register_card("nl.government.idcard")
         # self.register_card("nl.government.drivinglicence")
@@ -16,7 +40,7 @@ class CardScan:
         class_name = dn.split(".")[-1]
         mod = __import__(dn, fromlist=[class_name])
         card_class = getattr(mod, class_name)
-        self.card_parsers.append(card_class(self.args))
+        self.card_parsers.append(card_class({PROPERTY_DEBUG: False}))
         if self.verbose:
             print("Added detection class {}".format(dn))
 
@@ -24,7 +48,7 @@ class CardScan:
         input_image = Image(id_filename)
 
         # Create new empty debug directory if debug is enabled
-        if self.args.debug:
+        if self.debug:
             if os.path.isdir("debug"):
                 shutil.rmtree("debug")
             os.mkdir("debug")
@@ -42,7 +66,7 @@ class CardScan:
             card.rotate(card.angle())
             normalized = card.hullImage().invert()
             normalized_cards.append(normalized)
-            if self.args.debug:
+            if self.debug:
                 normalized.save("debug/normalized_{}.png".format(idx))
 
         # Run all registered card classes against all detected blobs
@@ -62,15 +86,15 @@ class CardScan:
 
         # Output results
         if self.verbose:
-            print "Output format: {}".format(self.args.format)
+            print "Output format: {}".format(self.format)
 
-        if self.args.format == "json":
+        if self.format == "json":
             import json
 
             json_report = json.dumps(matches)
             print json_report
 
-        if self.args.format == "yaml":
+        if self.format == "yaml":
             import yaml
 
             print yaml.dump(matches)

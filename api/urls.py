@@ -15,6 +15,9 @@ urlpatterns = patterns(
         '',
         url(r'^', include(router.urls)),
         url(r'^docs/', include('rest_framework_swagger.urls')),
+        url(r'^echo/', echo),
         url(r'^upload_card', upload_card),
-        url(r'^verify', upload_portrait_and_verify)
+        url(r'^upload', upload),
+        url(r'^verify$', verify),
+        url(r'^verify_simple', verify_simple)
 )

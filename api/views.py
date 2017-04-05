@@ -7,6 +7,8 @@ from rest_framework.response import Response
 from rest_framework.decorators import parser_classes
 import cognitive_face as CF
 import uuid
+import status
+import traceback
 
 from cardScan import CardScan
 
@@ -17,15 +19,29 @@ CF.Key.set(KEY)
 @parser_classes((FileUploadParser,))
 # @authentication_classes((TokenAuthentication,))
 # @permission_classes((IsAuthenticated,))
+def echo(request):
+    return Response(status=status.HTTP_201_CREATED)
+
+@api_view(['POST'])
+@parser_classes((FileUploadParser,))
+# @authentication_classes((TokenAuthentication,))
+# @permission_classes((IsAuthenticated,))
 def upload_card(request):
     '''
     Upload card image and start verification session
-    :param request:
+    ---
+
+    parameters:
+        - name: card_img
+          description: Image file of scanned card to be matched
+          required: true
+          type: file
+
     :return:
     '''
 
     # Create new verification session
-    session_id = 'test' # uuid.uuid4()
+    session_id = uuid.uuid4()
     # TODO: save received card image to s3
     with open('debug/' + str(session_id) + '_card_img.jpg','w') as f:
         f.write(request.stream.read())
@@ -33,12 +49,28 @@ def upload_card(request):
 
     return Response('received card')
 
+@api_view(['POST'])
+@parser_classes((FileUploadParser,))
+# @authentication_classes((TokenAuthentication,))
+# @permission_classes((IsAuthenticated,))
+def upload(request):
+    try:
+        card = request.FILES['card']
+        selfie = request.FILES['selfie']
+        session_id = uuid.uuid4()
+        with open('debug/' + str(session_id) + '_card.jpg', 'w') as f:
+            f.write(card.read())
+        with open('debug/' + str(session_id) + '_selfie.jpg', 'w') as f:
+            f.write(selfie.read())
+        return Response(status=status.HTTP_201_CREATED)
+    except KeyError:
+        return Response(status=status.HTTP_400_BAD_REQUEST, data={'detail': 'Expected image'})
 
 @api_view(['POST'])
 @parser_classes((FileUploadParser,))
 # @authentication_classes((TokenAuthentication,))
 # @permission_classes((IsAuthenticated,))
-def upload_portrait_and_verify(request):
+def verify(request):
 
     # TODO: save received card image to s3
     session_id = 'test' # uuid.uuid4()
@@ -62,3 +94,31 @@ def upload_portrait_and_verify(request):
     # print CF.face.detect(request.stream)[0]
 
     return Response('Verified')
+
+
+
+
+
+@api_view(['POST'])
+@parser_classes((FileUploadParser,))
+# @authentication_classes((TokenAuthentication,))
+# @permission_classes((IsAuthenticated,))
+def verify_simple(request):
+    try:
+        card = request.FILES['card']
+        selfie = request.FILES['selfie']
+        session_id = uuid.uuid4()
+        with open('debug/' + str(session_id) + '_card.jpg', 'w') as f:
+            f.write(card.read())
+        with open('debug/' + str(session_id) + '_selfie.jpg', 'w') as f:
+            f.write(selfie.read())
+
+        cardscan = CardScan({'format':'yaml', 'debug':True, 'verbose':True})
+
+        cardscan.parse('debug/' + str(session_id) + '_card.jpg',
+                       'debug/' + str(session_id) + '_selfie.jpg')
+    except KeyError:
+        tb = traceback.format_exc()
+        return Response(status=status.HTTP_400_BAD_REQUEST, data={'detail': tb})
+
+    return Response(status=status.HTTP_201_CREATED)

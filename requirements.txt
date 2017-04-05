@@ -5,7 +5,4 @@ cognitive-face==1.2.1
 django-rest-swagger==0.2.8
 djangorestframework==3.0.3
 numpy==1.11.0
-pygame==1.9.3
 requests==2.13.0
-scipy==0.13.2
-wsgiref==0.1.2

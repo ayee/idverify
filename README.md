@@ -32,6 +32,18 @@ Follow these steps to start development
 4. With PyCharm as IDE, create a Remote Python Interpreter with created image
 5. All Run and Debug should be run with the docker remote interpreter
 
+## Deployment
+
+Deployment is done using AWS ElasticBeanstalk 
+1. Create [Elastic Beanstalk single container docker](http://docs.aws.amazon.com/elasticbeanstalk/latest/dg/create_deploy_docker.html) environment using `eb init`.  Note that it requires [EB CLI version 3.3 or greater](http://docs.aws.amazon.com/elasticbeanstalk/latest/dg/eb-cli3-install.html)
+2. Once that's done, should be able to run the app locally with ElasticBean and Docker
+    ```
+    eb local run
+    ```
+    The website should be avaible to the http://192.168.99.100:8000/api/docs/
+    
+3. 
+
 ## Installation
 
 cardscan depends on `python2.7`, `SimpleCV`, `pyyaml`, `tesseract-ocr` and `python-tesseract`

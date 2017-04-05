@@ -33,8 +33,11 @@ class driver_license(BaseCard):
         '''
         logging.info("Match image to template")
         simple_template, simple_warped = self.warp(card_image)
-        simple_warped.getPIL().show()
-        simple_template.getPIL().show()
+
+        if self.debug:
+            simple_warped.getPIL().show()
+            simple_template.getPIL().show()
+
         res = simple_warped.findTemplate(template_image=simple_template, threshold=self.template_match_threshold)
 
         if res and res[0].x == 0 and res[0].y == 0:

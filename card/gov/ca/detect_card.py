@@ -6,7 +6,6 @@ import sys
 import cv2
 import numpy as np
 from SimpleCV import Image
-from matplotlib import image as image
 
 logging.basicConfig(stream=sys.stdout, level=logging.DEBUG)
 

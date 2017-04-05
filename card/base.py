@@ -7,7 +7,7 @@ class BaseCard(object):
         self.fields = {}
         self.card = None
         self.args = args
-        self.debug = args.debug
+        self.debug = args['debug']
 
     def get_text(self, card, label, x, y, w, h, color=Color.BLACK):
         field = card.crop(x=int(x), y=int(y), w=int(w), h=int(h)).whiteBalance().grayscale().binarize()  # Convert to grayscale and increase brightness
