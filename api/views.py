@@ -115,10 +115,10 @@ def verify_simple(request):
 
         cardscan = CardScan({'format':'yaml', 'debug':True, 'verbose':True})
 
-        cardscan.parse('debug/' + str(session_id) + '_card.jpg',
-                       'debug/' + str(session_id) + '_selfie.jpg')
+        matches = cardscan.parse('debug/' + str(session_id) + '_card.jpg', 'debug/' + str(session_id) + '_selfie.jpg')
+
     except KeyError:
         tb = traceback.format_exc()
         return Response(status=status.HTTP_400_BAD_REQUEST, data={'detail': tb})
 
-    return Response(status=status.HTTP_201_CREATED)
+    return Response(matches, status=status.HTTP_201_CREATED)

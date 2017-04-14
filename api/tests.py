@@ -55,6 +55,18 @@ class RestApiTestCase(TestCase):
         self.assertEqual(status.HTTP_201_CREATED, response.status_code)
 
 
+    def test_verify_fake_id(self):
+        fake_license = open('data/test_local/california-driving-license-front2.jpg', 'rb')
+        brad_pitt_face = open('data/test_local/brad-pitt-face.jpg', 'rb')
+        response = self.client.post('/api/verify_simple', {
+            'card': fake_license,
+            'selfie': brad_pitt_face
+        }
+        , format='multipart')
+        # TODO Change output to better show unmatched
+        self.assertEqual(response.content, '"[]"')
+        self.assertEqual(status.HTTP_201_CREATED, response.status_code)
+
     def test_verfiy_brad_pitt(self):
         '''
         Test simply verify (one call)
@@ -68,7 +80,8 @@ class RestApiTestCase(TestCase):
             'selfie': brad_pitt_face
         }
         response = self.client.post('/api/verify_simple', data, format='multipart')
-        print response.content
+        # TODO Change output to better show unmatched
+        self.assertEqual(response.content, '"[]"')
         self.assertEqual(status.HTTP_201_CREATED, response.status_code)
 
     def test_views_upload(self):

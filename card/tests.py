@@ -4,8 +4,8 @@ import cognitive_face as CF
 class MicrosoftCognitiveTestCase(TestCase):
 
     def test_detect_face(self):
-        brad_pitt_license = CF.face.detect('http://cdn01.cdn.justjared.com/wp-content/uploads/headlines/2006/06/brad-pitt-drivers-license.jpg')[0]
-        brad_pitt_face = CF.face.detect('https://s-media-cache-ak0.pinimg.com/564x/59/46/48/594648cfa3f40ea28568ff550d3570b0.jpg')[0]
+        brad_pitt_license = CF.face.detect('data/test_local/brad-pitt-drivers-license.jpg')[0]
+        brad_pitt_face = CF.face.detect('data/test_local/brad-pitt-face.jpg')[0]
         print CF.face.verify(brad_pitt_face['faceId'], brad_pitt_license['faceId'])
 
     @classmethod

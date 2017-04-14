@@ -19,10 +19,11 @@ Follow these steps to start development
 
 1. Install [Docker Toolbox for Mac])https://docs.docker.com/toolbox/toolbox_install_mac/). Note that there's a [difference](https://docs.docker.com/docker-for-mac/docker-toolbox/#setting-up-to-run-docker-for-mac) between Docker Toolbox and Docker for Mac.  Reason to use Toolbox is AWS ElasticBean and its documentation assumes Docker Toolbox
 
-2. Once installed, should be able to type `Docker Quickstart Terminal` in Spotlight Search and start Docker environment.
+2. Once installed, should be able to type `Docker Quickstart Terminal` in Spotlight Search and start Docker environment.  And a message will show the default machine's IP address.  For example, "docker is configured to use the default machine with IP 192.168.99.100"
 
 3. In order to build a image from Dockerfile in this project, run
     ```bash
+    cd ~/git/cardscan/
     docker build -t idverify .
     ```
     A docker image is built with the name 'idverfiy' and can be verified with:
@@ -40,7 +41,7 @@ Deployment is done using AWS ElasticBeanstalk
     ```
     eb local run
     ```
-    The website should be avaible to the http://192.168.99.100:8000/api/docs/
+    The website should be available to the http://192.168.99.100:8000/api/docs/
     
 3. 
 

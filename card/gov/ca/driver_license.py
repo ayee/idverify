@@ -54,12 +54,13 @@ class driver_license(BaseCard):
             return None
 
     def warp(self, simple_image):
-        '''
-        Warp with OpenCV's approxPolyDP to approximate a polygonal curve(s) with the specified precision,
-        and resize image to matching width of template
+        """
+        First warp image to right perspective with OpenCV's approxPolyDP to 
+        approximate a polygonal curve(s) with the specified precision, 
+        then resize image to matching width of template
         :param image: SimpleCV image
-        :return:
-        '''
+        :return: SimpleCV image that is transformed into perpendicular perspective
+        """
 
         # Convert SimpleCV image to opencv image
         image = simple_image.getNumpyCv2()
