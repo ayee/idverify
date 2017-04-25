@@ -23,7 +23,7 @@ RUN apt-get install -y python-numpy
 RUN apt-get install -y python-scipy
 RUN apt-get install -y python-pygame
 #RUN pip install PIL
-RUN pip install ipython
+RUN pip install ipython==5.3.0
 RUN pip install pyzmq
 RUN pip install jinja2
 RUN pip install tornado
