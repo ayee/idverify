@@ -1,0 +1,126 @@
+card_no:
+  x: 392
+  y: 118
+  w: 227
+  h: 48
+  binarize: false
+
+date_of_expiry:
+  x: 413
+  y: 195
+  w: 205
+  h: 44
+  binarize: false
+
+last_name:
+  x: 395
+  y: 246
+  w: 280
+  h: 36
+  binarize: false
+
+first_name:
+  x: 395
+  y: 283
+  w: 386
+  h: 34
+  binarize: false
+
+street_address:
+  x: 350
+  y: 315
+  w: 600
+  h: 33
+  binarize: false
+
+city_state_zip:
+  x: 350
+  y: 343
+  w: 600
+  h: 33
+  binarize: true
+
+dob:
+  x: 418
+  y: 376
+  w: 205
+  h: 42
+  binarize: true
+
+birth_date:
+  x: 822
+  y: 411
+  w: 168
+  h: 40
+  binarize: false
+
+restricted:
+  x: 434
+  y: 412
+  w: 100
+  h: 40
+  binarize: false
+
+sex:
+  x: 520
+  y: 500
+  w: 32
+  h: 40
+  binarize: false
+
+height:
+  x: 520
+  y: 535
+  w: 80
+  h: 40
+  binarize: false
+
+weight:
+  x: 690
+  y: 535
+  w: 80
+  h: 40
+  binarize: false
+
+hair:
+  x: 690
+  y: 500
+  w: 80
+  h: 40
+  binarize: false
+
+eye:
+  x: 865
+  y: 500
+  w: 80
+  h: 40
+  binarize: false
+
+date_of_issue:
+  x: 838
+  y: 576
+  w: 170
+  h: 32
+  binarize: true
+
+class:
+  x: 830
+  y: 165
+  w: 40
+  h: 40
+  binarize: false
+
+endorsement:
+  x: 800
+  y: 200
+  w: 100
+  h: 40
+  binarize: false
+
+signature:
+  x: 30
+  y: 520
+  w: 400
+  h: 80
+  binarize: false
+

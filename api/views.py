@@ -9,8 +9,9 @@ import cognitive_face as CF
 import uuid
 import status
 import traceback
-
+import cardScan
 from cardScan import CardScan
+import os
 
 KEY = '558b0e3d935741d3a76578dc0e1e4e81'  # Replace with a valid Subscription Key here.
 CF.Key.set(KEY)
@@ -113,8 +114,10 @@ def verify_simple(request):
         with open('debug/' + str(session_id) + '_selfie.jpg', 'w') as f:
             f.write(selfie.read())
 
-        cardscan = CardScan({'format':'yaml', 'debug':True, 'verbose':True})
+        # TODO: how many cardscan instances?
+        cardscan = CardScan({'format':'yaml', 'debug':True, 'verbose':True, 'export':False})
 
+        # TODO: parse() image objects instead of files
         matches = cardscan.parse('debug/' + str(session_id) + '_card.jpg', 'debug/' + str(session_id) + '_selfie.jpg')
 
     except KeyError:

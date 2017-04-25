@@ -5,8 +5,15 @@ class MicrosoftCognitiveTestCase(TestCase):
 
     def test_detect_face(self):
         brad_pitt_license = CF.face.detect('data/test_local/brad-pitt-drivers-license.jpg')[0]
+        self.assertIsNotNone(brad_pitt_license['faceId'])
+        # self.assertEqual(brad_pitt_license['faceRectangle'], {u'width': 233, u'top': 106, u'height': 233, u'left': 32})
         brad_pitt_face = CF.face.detect('data/test_local/brad-pitt-face.jpg')[0]
-        print CF.face.verify(brad_pitt_face['faceId'], brad_pitt_license['faceId'])
+        self.assertIsNotNone(brad_pitt_face['faceId'])
+        self.assertEqual(brad_pitt_face['faceRectangle'], {u'width': 233, u'top': 106, u'height': 233, u'left': 32})
+        face_binary = open('data/test_local/brad-pitt-face.jpg', 'rb')
+        brad_pitt_face = CF.face.detect(face_binary)[0]
+        self.assertIsNotNone(brad_pitt_face['faceId'])
+        self.assertEqual(brad_pitt_face['faceRectangle'], {u'width': 233, u'top': 106, u'height': 233, u'left': 32})
 
     @classmethod
     def setUpClass(cls):

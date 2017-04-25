@@ -22,7 +22,7 @@ RUN apt-get install -y python-opencv
 RUN apt-get install -y python-numpy
 RUN apt-get install -y python-scipy
 RUN apt-get install -y python-pygame
-# RUN pip install PIL
+#RUN pip install PIL
 RUN pip install ipython
 RUN pip install pyzmq
 RUN pip install jinja2
@@ -43,7 +43,7 @@ RUN pip install cognitive-face
 RUN pip install django-rest-swagger==0.2.8
 RUN pip install djangorestframework==3.0.3
 RUN pip install requests
-RUN pip install pillow
+RUN pip install pillow==2.7.0
 RUN pip install python-status
 RUN pip install argparse
 

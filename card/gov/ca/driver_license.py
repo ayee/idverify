@@ -1,8 +1,10 @@
 import logging
-
 import cv2
 from SimpleCV import *
 import cognitive_face as CF
+import yaml
+import pkg_resources
+from datetime import datetime
 
 import detect_card
 from card.base import BaseCard
@@ -20,23 +22,24 @@ class driver_license(BaseCard):
         self.data_directory = 'data/gov/ca/driver_license'
         self.dn = 'gov.ca.driver_license'
         self.unique_id = 'gov.ca.driver_license'
-        self.template_match_threshold = 2.5
+        self.template_match_threshold = 1.5
         super(driver_license, self).__init__(args)
 
 
-    def match(self, card_image, pic_filename):
+    def match(self, card_image, selfie):
         '''
         Match card image to template and verify
         :param card_image:
-        :param pic_filename
+        :param selfie
         :return:
         '''
         logging.info("Match image to template")
         simple_template, simple_warped = self.warp(card_image)
 
-        if self.debug:
-            simple_warped.getPIL().show()
-            simple_template.getPIL().show()
+        # if self.debug:
+        #     simple_warped.getPIL().show()
+        #     simple_template.getPIL().show()
+        simple_warped.save('debug/warped.jpg')
 
         res = simple_warped.findTemplate(template_image=simple_template, threshold=self.template_match_threshold)
 
@@ -48,7 +51,7 @@ class driver_license(BaseCard):
             # card = card.resize(w=1000)
             #
             # card = self.fix_rotation_twofeatures(card, 'top_left.png', ('top_right.png', 1, 'CCORR_NORM'))
-            return self.parse(simple_warped, pic_filename)
+            return self.parse(simple_warped, selfie)
         else:
             logging.info("Template not matched: %s", res)
             return None
@@ -80,9 +83,9 @@ class driver_license(BaseCard):
         logging.info('Warped image shape = %s', warped.shape)
         height, width, channels = warped.shape
 
-        if self.debug:
-            cv2.imshow('Warped', cv2.resize(warped, (0, 0), fx=1, fy=1))
-            cv2.waitKey(0)
+        # if self.debug:
+        #     cv2.imshow('Warped', cv2.resize(warped, (0, 0), fx=1, fy=1))
+        #     cv2.waitKey(0)
 
         template = cv2.imread(self.data_directory + "/template.jpg")
         logging.info(u'Template shape = %s', template.shape)
@@ -103,26 +106,27 @@ class driver_license(BaseCard):
         :param pic_filename:
         :return:
         '''
-        self.get_text(card, "surname", x=385, y=246, w=280, h=36)
-        self.get_text(card, "first_name", x=390, y=286, w=386, h=33)
-        self.get_text(card, "birth_date", x=822, y=411, w=168, h=40)
-        self.get_text(card, "birth_place", x=500, y=210, w=400, h=32)
-        self.get_text(card, "date_of_issue", x=320, y=260, w=170, h=32)
-        self.get_text(card, "date_of_expiry", x=580, y=260, w=170, h=32)
-        self.get_text(card, "street_address", x=331, y=309, w=600, h=36)
-        self.get_text(card, 'city_state_zip', x=336, y=346, w=600, h=36)
-        self.get_text(card, "card_no", x=385, y=123, w=227, h=48)
-        self.get_text(card, "categories", x=580, y=400, w=300, h=32)
-
-        self.unique_id += self.fields['card_no']
+        # self.get_text(card, "surname", x=385, y=246, w=280, h=36, binarize=False)
+        # self.get_text(card, "first_name", x=390, y=286, w=386, h=33, binarize=False)
+        # self.get_text(card, "birth_date", x=822, y=411, w=168, h=40, binarize=False)
+        # self.get_text(card, "date_of_issue", x=838, y=576, w=170, h=32, binarize=False)
+        # self.get_text(card, "date_of_expiry", x=580, y=260, w=170, h=32)
+        # self.get_text(card, "street_address", x=331, y=309, w=600, h=36, binarize=False)
+        # self.get_text(card, 'city_state_zip', x=336, y=346, w=600, h=36, binarize=False)
+        # self.get_text(card, "card_no", x=385, y=123, w=227, h=48, binarize=False)
+        # self.get_text(card, "categories", x=580, y=400, w=300, h=32)
+        conf = yaml.load(pkg_resources.resource_string(__name__, 'fields.yaml'))
+        for label, box in conf.iteritems():
+            self.get_text(card, label, x=box['x'], y=box['y'], w=box['w'], h=box['h'], binarize=box['binarize'])
+        # self.unique_id += self.fields['card_no']
 
         self.get_signature(card, x=320, y=388, w=217, h=87)
         license_photo = self.get_photo(card, x=26, y=123, w=296, h=395)
 
-        license_photo.save("debug/test.jpg")
-        license = CF.face.detect("debug/test.jpg")[0]
-        selfie = CF.face.detect(pic_filename)[0]
-        print CF.face.verify(license['faceId'], selfie['faceId'])
+        # license_photo.save("debug/test.jpg")
+        # license = CF.face.detect("debug/test.jpg")[0]
+        # selfie = CF.face.detect(pic_filename)[0]
+        # print CF.face.verify(license['faceId'], selfie['faceId'])
 
         structure = {
             'card': {
@@ -130,22 +134,19 @@ class driver_license(BaseCard):
                 'class': 'driving-license'
             },
             'country': 'us',
-            'licenceId': self.fields['card_no'],
+            'license_number': self.fields['card_no'],
             'person': {
-                'surname': self.fields['surname'],
+                'lastname': self.fields['last_name'],
                 'firstname': self.fields['first_name'],
-                'birth': {
-                    'date': self.parse_date(self.fields['birth_date']),
-                    'place': self.fields['birth_place']
-                },
+                'birthdate': self.parse_date(self.fields['birth_date'])
             },
             'validity': {
-                'start': self.parse_date(self.fields['date_of_issue']),
-                'end': self.parse_date(self.fields['date_of_expiry'])
+                # 'start': self.parse_date(self.fields['date_of_issue']),
+                'start': self.fields['date_of_issue'],
+                'end': str(datetime.strptime(self.fields['date_of_expiry'], '%m/%d/%Y').date())
             },
             'street_address': self.fields['street_address'],
             'city_state_zip': self.fields['city_state_zip'],
-            'categories': self.parse_categories(self.fields['categories'])
         }
 
         if self.debug:

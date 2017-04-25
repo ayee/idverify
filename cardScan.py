@@ -2,13 +2,12 @@
 from SimpleCV import *
 import shutil
 import logging
+import json
 
 PROPERTY_VERBOSE = 'verbose'
-
 PROPERTY_DEBUG = 'debug'
-
 PROPERTY_FORMAT = 'format'
-
+PROPERTY_EXPORT = 'export'
 
 class CardScan:
     def __init__(self, props):
@@ -16,10 +15,12 @@ class CardScan:
             self.format = props[PROPERTY_FORMAT]
             self.debug = props[PROPERTY_DEBUG]
             self.verbose = props[PROPERTY_VERBOSE]
+            self.export = props[PROPERTY_EXPORT]
         else: # assumed to be args object
             self.format = props.format
             self.debug = props.debug
             self.verbose = props.verbose
+            self.export = props.export
 
         #     logging.warning('Creating {0} object without properties (dict), will create with default values')
         #     self.props = {
@@ -40,7 +41,10 @@ class CardScan:
         class_name = dn.split(".")[-1]
         mod = __import__(dn, fromlist=[class_name])
         card_class = getattr(mod, class_name)
-        self.card_parsers.append(card_class({PROPERTY_DEBUG: False}))
+        self.card_parsers.append(card_class({
+            PROPERTY_DEBUG: True,
+            PROPERTY_EXPORT: True
+        }))
         if self.verbose:
             print("Added detection class {}".format(dn))
 
@@ -48,10 +52,11 @@ class CardScan:
         input_image = Image(id_filename)
 
         # Create new empty debug directory if debug is enabled
+        # TODO debug images to s3
         if self.debug:
-            if os.path.isdir("debug"):
-                shutil.rmtree("debug")
-            os.mkdir("debug")
+            # if os.path.isdir("debug"):
+            #     shutil.rmtree("debug")
+            # os.mkdir("debug")
             input_image.save("debug/input.png")
 
         # Use blob detection to find all cards in the scanned document
@@ -69,6 +74,8 @@ class CardScan:
             if self.debug:
                 normalized.save("debug/normalized_{}.png".format(idx))
 
+        #TODO Move matching between selfie and card portrait somewhere else, leave only card/template match here
+        selfie = Image(pic_filename)
         # Run all registered card classes against all detected blobs
         matches = []
         for ncard in normalized_cards:
@@ -77,7 +84,7 @@ class CardScan:
             for tester in self.card_parsers:
                 if self.verbose:
                     print("  Running tester: {}".format(tester.name))
-                match = tester.match(ncard, pic_filename)
+                match = tester.match(ncard, selfie)
                 if match != None:
                     if self.verbose:
                         print("    Tester matched!")
@@ -89,15 +96,15 @@ class CardScan:
             print "Output format: {}".format(self.format)
 
         if self.format == "json":
-            import json
-
             json_report = json.dumps(matches)
-            print json_report
+            return json_report
 
         if self.format == "yaml":
             import yaml
 
-            print yaml.dump(matches)
+            return yaml.dump(matches)
+
+        return json.dumps(matches)
 
 
 if __name__ == "__main__":
@@ -115,4 +122,5 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     cardscan = CardScan(args)
-    cardscan.parse(args.filename, args.picture)
+    parsed = cardscan.parse(args.filename, args.picture)
+    print parsed

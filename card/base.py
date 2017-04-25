@@ -8,9 +8,25 @@ class BaseCard(object):
         self.card = None
         self.args = args
         self.debug = args['debug']
+        self.export = args['export']
 
-    def get_text(self, card, label, x, y, w, h, color=Color.BLACK):
-        field = card.crop(x=int(x), y=int(y), w=int(w), h=int(h)).whiteBalance().grayscale().binarize()  # Convert to grayscale and increase brightness
+    def get_text(self, card, label, x, y, w, h, color=Color.BLACK, binarize=True):
+        """
+        Parse text using tesseract-ocr via python wrapper tesserocr
+        :param binarize:
+        :param card:
+        :param label:
+        :param x:
+        :param y:
+        :param w:
+        :param h:
+        :param color:
+        :param binarize: Binarize before OCR.  Default is True
+        :return:
+        """
+        field = card.crop(x=int(x), y=int(y), w=int(w), h=int(h))
+        if binarize:
+            field = field.whiteBalance().grayscale().binarize()  # Convert to grayscale and increase brightness
         try:
             # field_text = field.readText().strip().split("\n")[0] # Run tesseract OCR and cleanup result
             field_text = tesserocr.image_to_text(field.getPIL()).strip().split("\n")[0] # Use an alternative Tesseract OCR python package
@@ -21,9 +37,11 @@ class BaseCard(object):
             if not os.path.isdir("debug/get_text"):
                 os.mkdir("debug/get_text")
             field.save("debug/get_text/" + label + ".png")
-            card.drawRectangle(x=x, y=y, w=w, h=h, color=Color.RED)
-            card.drawText("{}: {}".format(label, field_text), x=x+10, y=y, color=Color.RED)
+            # card.drawRectangle(x=x, y=y, w=w, h=h, color=Color.RED)
+            # card.drawText("{}: {}".format(label, field_text), x=x+10, y=y, color=Color.RED)
+            card.save('debug/get_text/get_text_card.png')
         self.fields[label] = field_text
+        return field_text
 
     def get_signature(self, card, x, y, w, h):
         field = card.crop(x=x, y=y, w=w, h=h)
@@ -31,7 +49,7 @@ class BaseCard(object):
         if self.debug:
             card.drawRectangle(x=x, y=y, w=w, h=h, color=Color.RED)
             card.drawText("Signature", x=x+10, y=y, color=Color.RED)
-        if self.args.export:
+        if self.export:
             field.save(self.unique_id + ".signature.png")
 
     def get_photo(self, card, x, y, w, h):
@@ -39,7 +57,7 @@ class BaseCard(object):
         if self.debug:
             card.drawRectangle(x=x, y=y, w=w, h=h, color=Color.RED)
             card.drawText("Photo", x=x+10, y=y, color=Color.RED)
-        if self.args.export:
+        if self.export:
             field.save(self.unique_id + ".photo.png")
         return field
 
